@@ -3,6 +3,8 @@ This python library, Orb-Weaver, is designed to process VELOCIraptor Halo Finder
 even construct a new halo catalog (with modifications to CM positions, halo masses, identification of subhaloes). 
 """
 
+#Make this code backwards compatible with python2
+from __future__ import print_function
 
 import sys,os,os.path,string,time,re,struct
 import math,operator
@@ -66,13 +68,13 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
         pos=[[]for j in range(numsnaps)]
         pos_tree=[[]for j in range(numsnaps)]
         start=time.clock()
-        if (iverbose): print "tree build"
+        if (iverbose): print("tree build")
         for j in range(numsnaps):
             if (numhalos[j]>0):
                 boxval=boxsize*atime[j]/hval
                 pos[j]=np.transpose(np.asarray([halodata[j]["Xc"],halodata[j]["Yc"],halodata[j]["Zc"]]))
                 pos_tree[j]=spatial.cKDTree(pos[j],boxsize=boxval)
-        if (iverbose): print "done ",time.clock()-start
+        if (iverbose): print("done ",time.clock()-start)
     #else assume tree has been passed
     for j in range(numsnaps):
         if (numhalos[j]==0): continue
@@ -82,7 +84,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
         mergercut=np.where(halodata[j]["LastMergerRatio"][partcutwdata]<0)
         hids=np.asarray(halodata[j]["ID"][partcutwdata][mergercut],dtype=np.uint64)
         start=time.clock()
-        if (iverbose):print "Processing ", len(hids)
+        if (iverbose):print("Processing ", len(hids))
         if (len(hids)==0):continue
 
         for hidval in hids:
@@ -221,7 +223,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
                 progsnap=halodata[halosnap]["TailSnap"][haloindex]
                 progindex=int(progid%HALOIDVAL-1)
                 numprog=tree[halosnap]["Num_progen"][haloindex]
-        if (iverbose): print "Done snap",j,time.clock()-start
+        if (iverbose): print("Done snap",j,time.clock()-start)
         return pos_tree
 
 def IdentifyOrbits(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1000,HALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
@@ -294,13 +296,13 @@ def IdentifyOrbits(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1
         pos=[[]for j in range(numsnaps)]
         pos_tree=[[]for j in range(numsnaps)]
         start=time.clock()
-        if (iverbose): print "tree build"
+        if (iverbose): print("tree build")
         for j in range(numsnaps):
             if (numhalos[j]>0):
                 boxval=boxsize*atime[j]/hval
                 pos[j]=np.transpose(np.asarray([halodata[j]["Xc"],halodata[j]["Yc"],halodata[j]["Zc"]]))
                 pos_tree[j]=spatial.cKDTree(pos[j],boxsize=boxval)
-        if (iverbose): print "done ",time.clock()-start
+        if (iverbose): print("done ",time.clock()-start)
     #else assume tree has been passed
     for j in range(numsnaps):
         if (numhalos[j]==0): continue
@@ -317,9 +319,9 @@ def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPAR
     hosts=np.where(halodata[snapval]["hostHaloID"][partcutwdata]==-1)
     hids=np.asarray(halodata[snapval]["ID"][partcutwdata][hosts],dtype=np.uint64)
     start=time.clock()
-    if (iverbose):print "Processing ", len(hids)
+    if (iverbose):print("Processing ", len(hids))
     if (len(hids)==0):
-        if (iverbose): print "Done snap",snapval,time.clock()-start
+        if (iverbose): print("Done snap",snapval,time.clock()-start)
         return 
     for hidval in hids:
         haloid=np.uint64(hidval)
@@ -418,7 +420,7 @@ def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPAR
                 if (progid!=mainprogid):
                     progindex=int(progid%HALOIDVAL-1)
                     GetHaloRelativeMotion(progindex,mainhaloid,mainprogsnap,radval,halodata,boxsize,hval,atime,posref,endreftime,HALOIDVAL)
-    if (iverbose): print "Done snap",snapval,time.clock()-start
+    if (iverbose): print("Done snap",snapval,time.clock()-start)
 
 def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,halodata,boxsize,hval,atime,posref,endreftime, HALOIDVAL):
     """
