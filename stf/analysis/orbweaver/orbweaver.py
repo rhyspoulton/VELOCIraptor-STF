@@ -31,12 +31,12 @@ def GetProgenLength(halodata,haloindex,halosnap,haloid,atime,HALOIDVAL,endreftim
     """
     Get the length of a halo's progenitors
     """
+    haloindexval =haloindex
     proglen=1
     progid=halodata[halosnap]["Tail"][haloindex]
     progsnap=halodata[halosnap]["TailSnap"][haloindex]
     progindex=int(progid%HALOIDVAL-1)
     while (progid!=haloid):
-        proglen+=1
         haloid=progid
         halosnap=progsnap
         haloindex=progindex
@@ -44,13 +44,14 @@ def GetProgenLength(halodata,haloindex,halosnap,haloid,atime,HALOIDVAL,endreftim
         progsnap=halodata[halosnap]["TailSnap"][haloindex]
         progindex=int(progid%HALOIDVAL-1)
         if (atime[halosnap]<endreftime):break
+        proglen+=1
     return proglen
 
 """
     Functions that add information to the halo catalog
 """
 
-def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLIM=0.1,RADINFAC=1.2,RADOUTFAC=1.5,NPARTCUT=100, HALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
+def IdentifyMergers(numsnaps,numhalos,halodata,boxsize,hval,atime,MERGERMLIM=0.1,RADINFAC=1.2,RADOUTFAC=1.5,NPARTCUT=100, HALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
     """
     Using head/tail info in halodata dictionary identify mergers based on distance and mass ratios
     #todo still testing 
@@ -96,7 +97,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
             progid=halodata[halosnap]["Tail"][haloindex]
             progsnap=halodata[halosnap]["TailSnap"][haloindex]
             progindex=int(progid%HALOIDVAL-1)
-            numprog=tree[halosnap]["Num_progen"][haloindex]
+            numprog=halodata[halosnap]["Num_progen"][haloindex]
             #if object has no progenitor set LastMergerRatio to 0 and LastMerger to 0
             if (numprog==0): 
                 halodata[halosnap]["LastMerger"][haloindex]=0
@@ -144,7 +145,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
                                     mergerstartindex=starthaloindex
                                     mergerstartid=starthaloid
                                     mergerstartsnap=starthalosnap
-                                    while (tree[starthalosnap]["Num_progen"][starthaloindex]>0 and tree[startmergersnap]["Num_progen"][startmergerindex]>0):
+                                    while (halodata[starthalosnap]["Num_progen"][starthaloindex]>0 and halodata[startmergersnap]["Num_progen"][startmergerindex]>0):
                                         posvalrel=[halodata[starthalosnap]["Xc"][starthaloindex]-halodata[startmergersnap]["Xc"][startmergerindex],halodata[starthalosnap]["Yc"][starthaloindex]-halodata[startmergersnap]["Yc"][startmergerindex],halodata[starthalosnap]["Zc"][starthaloindex]-halodata[startmergersnap]["Zc"][startmergerindex]]
                                         boxval=boxsize*atime[starthalosnap]/hval
                                         for ij in range(3):
@@ -222,11 +223,11 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
                 progid=halodata[halosnap]["Tail"][haloindex]
                 progsnap=halodata[halosnap]["TailSnap"][haloindex]
                 progindex=int(progid%HALOIDVAL-1)
-                numprog=tree[halosnap]["Num_progen"][haloindex]
+                numprog=halodata[halosnap]["Num_progen"][haloindex]
         if (iverbose): print("Done snap",j,time.clock()-start)
         return pos_tree
 
-def IdentifyOrbits(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1000,HALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
+def IdentifyOrbits(numsnaps,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1000,HALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
     """
     Using head/tail info deteremine when subhaloes orbit their host, when they enter or leave etc. 
     #todo still testing 
@@ -291,12 +292,12 @@ def IdentifyOrbits(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1
         halodata[j]["NumOutwardCrossing_R2.5"]=np.zeros(numhalos[j],dtype=np.uint32)
         halodata[j]["NumOutwardCrossing_R3.0"]=np.zeros(numhalos[j],dtype=np.uint32)
 
-    #built KD tree to quickly search for near neighbours
+    #build KD tree to quickly search for near neighbours
     if (len(pos_tree)==0):
         pos=[[]for j in range(numsnaps)]
         pos_tree=[[]for j in range(numsnaps)]
         start=time.clock()
-        if (iverbose): print("tree build")
+        if (iverbose): print("Building a KD tree to quickly search for nearest neighbours")
         for j in range(numsnaps):
             if (numhalos[j]>0):
                 boxval=boxsize*atime[j]/hval
@@ -306,9 +307,9 @@ def IdentifyOrbits(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1
     #else assume tree has been passed
     for j in range(numsnaps):
         if (numhalos[j]==0): continue
-        IdentifyOrbitsAtSnap(j, tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose)
+        IdentifyOrbitsAtSnap(j,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose)
 
-def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose):
+def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose):
     """
     Using head/tail info to calculate orbits of objects around halos at a given snapshot. See #ref IdentifyOrbits for data blocks
     produced. 
@@ -334,7 +335,7 @@ def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPAR
         progid=halodata[halosnap]["Tail"][haloindex]
         progsnap=halodata[halosnap]["TailSnap"][haloindex]
         progindex=int(progid%HALOIDVAL-1)
-        numprog=tree[halosnap]["Num_progen"][haloindex]
+        numprog=halodata[halosnap]["Num_progen"][haloindex]
         mainprogid=progid
         mainprogsnap=progsnap
         mainprogindex=progindex
@@ -355,7 +356,7 @@ def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPAR
         mainpos=np.zeros([6,proglength])
         mainatime=np.zeros(proglength)
         proglength=0
-        while (haloid!=progid):
+        while (True):
             afac=1.0/atime[halosnap]
             mainatime[proglength]=atime[halosnap]
             mainpos[0][proglength]=halodata[halosnap]["Xc"][haloindex]*afac
@@ -368,6 +369,8 @@ def IdentifyOrbitsAtSnap(snapval, tree,numhalos,halodata,boxsize,hval,atime,NPAR
             proglength+=1
             #store last time
             endreftime=atime[halosnap]
+
+            if(haloid!=progid): break
 
             haloid=progid
             halosnap=progsnap
@@ -461,7 +464,7 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
     progid=halodata[halosnap]["Tail"][haloindex]
     progsnap=halodata[halosnap]["TailSnap"][haloindex]
     progindex=int(progid%HALOIDVAL-1)
-    while (haloid!=progid):
+    while (True):
         #move along till end
         if (atime[halosnap]<endreftime):break
         afac=1.0/atime[halosnap]
@@ -485,7 +488,10 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
         if (poshalo[0][proglength]>0.5*boxval): poshalo[0][proglength]-=boxval
         if (poshalo[1][proglength]>0.5*boxval): poshalo[1][proglength]-=boxval
         if (poshalo[2][proglength]>0.5*boxval): poshalo[2][proglength]-=boxval
+
         proglength+=1
+
+        if(haloid==progid):  break
 
         haloid=progid
         halosnap=progsnap
