@@ -22,6 +22,7 @@ import multiprocessing as mp
 sys.path.append('../../tools/')
 #import the python toosl in velociraptor_python_tools
 from velociraptor_python_tools import *
+from line_profiler import LineProfiler
 
 """
     Tools for parsing the halo catalog temporal information 
@@ -43,8 +44,9 @@ def GetProgenLength(halodata,haloindex,halosnap,haloid,atime,HALOIDVAL,endreftim
         progid=halodata[halosnap]["Tail"][haloindex]
         progsnap=halodata[halosnap]["TailSnap"][haloindex]
         progindex=int(progid%HALOIDVAL-1)
-        if (atime[halosnap]<endreftime):break
+        if (atime[halosnap]<endreftime): break
         proglen+=1
+
     return proglen
 
 """
@@ -308,6 +310,7 @@ def IdentifyOrbits(numsnaps,numhalos,halodata,boxsize,hval,atime,NPARTCUT=1000,H
     for j in range(numsnaps):
         if (numhalos[j]==0): continue
         IdentifyOrbitsAtSnap(j,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose)
+        return
 
 def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,HALOIDVAL, pos_tree, iverbose):
     """
@@ -356,6 +359,9 @@ def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,H
         mainpos=np.zeros([6,proglength])
         mainatime=np.zeros(proglength)
         proglength=0
+
+        interpolate = False
+
         while (True):
             afac=1.0/atime[halosnap]
             mainatime[proglength]=atime[halosnap]
@@ -369,8 +375,12 @@ def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,H
             proglength+=1
             #store last time
             endreftime=atime[halosnap]
+            endreftsnap=halosnap
 
-            if(haloid!=progid): break
+            if(haloid==progid): break
+
+            if((progsnap-halosnap)>1):
+                interpMainPos = True
 
             haloid=progid
             halosnap=progsnap
@@ -379,8 +389,19 @@ def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,H
             progsnap=halodata[halosnap]["TailSnap"][haloindex]
             progindex=int(progid%HALOIDVAL-1)
 
+
         #interpolate position 
-        posref=[scipyinterp.interp1d(mainatime,mainpos[ij]) for ij in range(6)]
+        if(interpMainPos):
+            snaps = np.arange(snapval,halosnap+1,1).astype(int)
+            posref = np.zeros([halosnap-snapval+1,6])
+
+            for ij in range(6):
+
+                interpdata=scipyinterp.interp1d(mainatime,mainpos[ij])
+
+                posref[:,ij]=interpdata(atime[snaps])
+
+       
 
         haloid=mainhaloid
         halosnap=mainhalosnap
@@ -410,6 +431,7 @@ def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,H
                         nhalolist+=1
             #if there are halos that are subhalos or smaller halos in volume move on to next section
             if (nhalolist>0):
+                # print(np.sum(halodata[halosnap]["OrbitID"][halolist]==-2),"Have been pre-processed")
                 #now have cleaned list of objects to examine
                 for ihalo in range(nhalolist):
                     #then get the relative motion and fill orbit properties
@@ -425,7 +447,7 @@ def IdentifyOrbitsAtSnap(snapval,numhalos,halodata,boxsize,hval,atime,NPARTCUT,H
                     GetHaloRelativeMotion(progindex,mainhaloid,mainprogsnap,radval,halodata,boxsize,hval,atime,posref,endreftime,HALOIDVAL)
     if (iverbose): print("Done snap",snapval,time.clock()-start)
 
-def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,halodata,boxsize,hval,atime,posref,endreftime, HALOIDVAL):
+def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,halodata,boxsize,hval,atime,posref,endreftime, HALOIDVAL,interpMainPos=False):
     """
     Examine the motion of an object relative to a reference position and some radial scale given by a mainhalo
     This is used to compute orbital parameters
@@ -448,6 +470,7 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
     #determine length of main branch
     proglength=GetProgenLength(halodata,haloindex,halosnap,haloid,atime,HALOIDVAL,endreftime)
     #if length is small do nothing
+
     if (proglength<=10): return
 
     poshalo=np.zeros([6,proglength])
@@ -469,7 +492,7 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
         if (atime[halosnap]<endreftime):break
         afac=1.0/atime[halosnap]
         boxval=boxsize*atime[halosnap]/hval
-        refpos=[posref[ij](atime[halosnap]) for ij in range(6)]
+        refpos=posref[halosnap]
         poshalo[0][proglength]=halodata[halosnap]["Xc"][haloindex]*afac-refpos[0]
         poshalo[1][proglength]=halodata[halosnap]["Yc"][haloindex]*afac-refpos[1]
         poshalo[2][proglength]=halodata[halosnap]["Zc"][haloindex]*afac-refpos[2]
@@ -479,7 +502,7 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
         masshalo[proglength]=halodata[halosnap]["Mass_tot"][haloindex]
         vmaxhalo[proglength]=halodata[halosnap]["Vmax"][haloindex]
         atimehalo[proglength]=atime[halosnap]
-        jhalo[proglength]=np.cross([poshalo[0][proglength],poshalo[1][proglength],poshalo[2][proglength]],[poshalo[3][proglength],poshalo[4][proglength],poshalo[5][proglength]])
+        # jhalo[proglength]=np.cross([poshalo[0][proglength],poshalo[1][proglength],poshalo[2][proglength]],[poshalo[3][proglength],poshalo[4][proglength],poshalo[5][proglength]])
 
         #correction positions for period
         if (poshalo[0][proglength]<-0.5*boxval): poshalo[0][proglength]+=boxval
@@ -490,6 +513,9 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
         if (poshalo[2][proglength]>0.5*boxval): poshalo[2][proglength]-=boxval
 
         proglength+=1
+
+        #Lets mark this halo as being already done
+        halodata[halosnap]["OrbitID"][haloindex] = -2
 
         if(haloid==progid):  break
 
@@ -564,3 +590,29 @@ def GetHaloRelativeMotion(haloindexval,mainhaloid,mainhalosnap,mainhaloradval,ha
         if (min(radhalo[i:])>mainhaloradval and halodata[halosnap]["MassAtAccretion"][haloindex]==0):
             halodata[halosnap]["MassAtAccretion"][haloindex]=masshalo[i]
             halodata[halosnap]["VmaxAtAccretion"][haloindex]=vmaxhalo[i]
+
+    # #First lets check if this halo has completed more than 2 orbits
+
+    # if(halodata[halosnap]["NumOrbits"][haloindex]>2):
+
+# numsnaps = 200
+
+# atime,tree,numhalos,halodata,cosmodata,unitdata = ReadUnifiedTreeandHaloCatalog("/mnt/su3ctm/pelahi/waves/analysis/waves_40_512/VELOCIraptor.tree.t4.unifiedhalotree")
+
+# pos=[[]for j in range(numsnaps)]
+# pos_tree=[[]for j in range(numsnaps)]
+# start=time.clock()
+# for j in range(numsnaps):
+#     if (numhalos[j]>0):
+#         boxval=cosmodata["BoxSize"]*atime[j]/cosmodata["Hubble_param"]
+#         pos[j]=np.transpose(np.asarray([halodata[j]["Xc"],halodata[j]["Yc"],halodata[j]["Zc"]]))
+#         pos_tree[j]=spatial.cKDTree(pos[j],boxsize=boxval)
+
+lp = LineProfiler()
+lp.add_function(IdentifyOrbitsAtSnap)
+lp.add_function(GetHaloRelativeMotion)
+lp_wrapper = lp(IdentifyOrbits)
+lp_wrapper(numsnaps,numhalos,halodata,cosmodata["BoxSize"],cosmodata["Hubble_param"],atime,100000,pos_tree=pos_tree)
+lp.print_stats()
+lp.dump_stats("orbwaver-timeings.lprof")
+
