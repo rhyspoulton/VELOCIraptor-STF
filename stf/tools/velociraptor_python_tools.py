@@ -2053,8 +2053,8 @@ def ReadUnifiedTreeandHaloCatalog(fname, desiredfields=[], icombinedfile=1,iverb
 
         #allocate memory
         halodata=[dict() for i in range(numsnaps)]
-        numhalos=[0 for i in range(numsnaps)]
-        atime=[0 for i in range(numsnaps)]
+        numhalos=np.zeros(numsnaps,dtype=int)
+        atime=np.zeros(numsnaps)
         tree=[[] for i in range(numsnaps)]
         cosmodata=dict()
         unitdata=dict()
