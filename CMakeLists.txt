@@ -44,6 +44,9 @@ vr_option(ALLOWPARALLELHDF5 "Attempt to include parallel HDF5 support in VELOCIr
 vr_option(ALLOWCOMPRESSIONPARALLELHDF5 "Attempt to include parallel HDF5 compression support in VELOCIraptor" OFF)
 vr_option(XDR  "XDR input support (used by nchilada)" OFF)
 
+# Output Options
+vr_option(REDUCED_OUTPUT    "Reduce the number of fields output ny VELOCIraptor" OFF)
+
 # Precision options
 vr_option(LONG_INT          "Use long ints to represent all integers. Needed if dealing with more than MAXINT number of particles" ON)
 
@@ -142,6 +145,8 @@ macro(vr_option_defines varname define)
 		set(VR_HAS_${varname} No)
 	endif()
 endmacro()
+
+vr_option_defines(REDUCED_OUTPUT            REDUCEDOUTPUT)
 
 vr_option_defines(XDR                       USEXDR)
 
@@ -354,6 +359,8 @@ vr_report("File formats"
 if (VR_HAS_COMPRESSED_HDF5  AND VR_HAS_PARALLEL_HDF5)
 	message("\n WARNING: Parallel Compression HDF5 active, use with caution as it is unstable!\n")
 endif()
+vr_report("Output related"
+				"Reduced number of fields output" REDUCED_OUTPUT)
 vr_report("Precision-specifics"
         "Long Integers" LONG_INT)
 vr_report("OpenMP-specifics"

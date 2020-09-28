@@ -1418,11 +1418,15 @@ struct PropData
     ///\name physical properties regarding mass, size
     //@{
     Double_t gmass,gsize,gMvir,gRvir,gRcm,gRmbp,gRminpot,gmaxvel,gRmaxvel,gMmaxvel,gRhalfmass,gMassTwiceRhalfmass;
-    Double_t gM200c,gR200c,gM200m,gR200m,gMFOF,gM6DFOF,gM500c,gR500c,gMBN98,gRBN98;
+    Double_t gM200c,gR200c,gMFOF,gM6DFOF,gM500c,gR500c,gMBN98,gRBN98;
     //to store exclusive masses of halo ignoring substructure
     Double_t gMvir_excl,gRvir_excl,gM200c_excl,gR200c_excl,gM200m_excl,gR200m_excl,gMBN98_excl,gRBN98_excl;
     //to store halfmass radii of overdensity masses
     Double_t gRhalf200c,gRhalf200m,gRhalfBN98;
+
+#ifndef REDUCEDOUTPUT
+    Double_t gM200m, gR200m;
+#endif //REDUCEDOUTPUT
 
     //@}
     ///\name physical properties for shape/mass distribution
@@ -1793,7 +1797,7 @@ struct PropData
     PropData()
     {
         num=gNFOF=gN6DFOF=0;
-        gmass=gsize=gRmbp=gmaxvel=gRmaxvel=gRvir=gR200m=gR200c=gRhalfmass=gMassTwiceRhalfmass=Efrac=Pot=T=0.;
+        gmass=gsize=gRmbp=gmaxvel=gRmaxvel=gRvir=gR200c=gRhalfmass=gMassTwiceRhalfmass=Efrac=Pot=T=0.;
         gMFOF=gM6DFOF=0;
         gM500c=gR500c=0;
         gMBN98=gRBN98=0;
@@ -1820,6 +1824,11 @@ struct PropData
         RV_veldisp=Matrix(0.);
         RV_eigvec=Matrix(0.);
         RV_lambda_B=RV_lambda_P=RV_Krot=0;
+
+#ifndef REDUCEDOUTPUT
+        gM200m=0.;
+        gR200m=0.;
+#endif //REDUCEDOUTPUT
 
 #ifdef GASON
         M_gas_rvmax=M_gas_30kpc=M_gas_50kpc=0;
@@ -2386,17 +2395,20 @@ struct PropData
         gposmbp=gposmbp*opt.h/opt.a;
         gposminpot=gposminpot*opt.h/opt.a;
         gmass*=opt.h;
-        gMvir*=opt.h;
         gM200c*=opt.h;
+        gMFOF*=opt.h;
+        gsize*=opt.h/opt.a;
+        gRmaxvel*=opt.h/opt.a;
+        gR200c*=opt.h/opt.a;
+        gRhalfmass*=opt.h/opt.a;
+        gJ=gJ*opt.h*opt.h/opt.a;
+#ifndef REDUCEDOUTPUT
+        gMvir*=opt.h;
         gM200m*=opt.h;
         gM500c*=opt.h;
         gMBN98*=opt.h;
-        gMFOF*=opt.h;
-        gsize*=opt.h/opt.a;
         gRmbp*=opt.h/opt.a;
-        gRmaxvel*=opt.h/opt.a;
         gRvir*=opt.h/opt.a;
-        gR200c*=opt.h/opt.a;
         gR200m*=opt.h/opt.a;
         gR500c*=opt.h/opt.a;
         gRBN98*=opt.h/opt.a;
@@ -2404,12 +2416,11 @@ struct PropData
         gRhalf200c*=opt.h/opt.a;
         gRhalfBN98*=opt.h/opt.a;
         gMassTwiceRhalfmass*=opt.h;
-        gRhalfmass*=opt.h/opt.a;
-        gJ=gJ*opt.h*opt.h/opt.a;
         gJ200m=gJ200m*opt.h*opt.h/opt.a;
         gJ200c=gJ200c*opt.h*opt.h/opt.a;
         gJBN98=gJBN98*opt.h*opt.h/opt.a;
         RV_J=RV_J*opt.h*opt.h/opt.a;
+#endif //REDUCEDOUTPUT
 
         if (opt.iextrahalooutput) {
             gM200c_excl*=opt.h;

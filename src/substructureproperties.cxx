@@ -429,6 +429,7 @@ private(EncMassSF,EncMassNSF,Krot_sf,Krot_nsf,Ekin_sf,Ekin_nsf)
             vz = (*Pval).Vz()-pdata[i].gcmvel[2];
             J=Coordinate(Pval->GetPosition()).Cross(Coordinate(vx,vy,vz))*mval;
             pdata[i].gJ=pdata[i].gJ+J;
+#ifndef REDUCEDOUTPUT
             if (opt.iextrahalooutput) {
                 if (opt.iInclusiveHalo==0) {
                     if (rc<pdata[i].gR200m) pdata[i].gJ200m=pdata[i].gJ200m+J;
@@ -458,20 +459,26 @@ private(EncMassSF,EncMassNSF,Krot_sf,Krot_nsf,Ekin_sf,Ekin_nsf)
             pdata[i].gveldisp(0,1)+=vx*vy*mval;
             pdata[i].gveldisp(0,2)+=vx*vz*mval;
             pdata[i].gveldisp(1,2)+=vy*vz*mval;
+#endif //REDUCEDOUTPUT
             //calculate vc
             if (rc>0) if (EncMass>0) vc=sqrt(opt.G*EncMass/rc);
             //max circ and then vir data
             if (vc>pdata[i].gmaxvel && EncMass>=1.0/sqrt(numingroup[i])*pdata[i].gmass) {pdata[i].gmaxvel=vc;pdata[i].gRmaxvel=rc;pdata[i].gMmaxvel=EncMass;RV_num=j+1;}
             if (EncMass>0.5*pdata[i].gmass && pdata[i].gRhalfmass==0) pdata[i].gRhalfmass=rc;
+#ifndef REDUCEDOUTPUT
             if (pdata[i].gRhalfmass>0 && pdata[i].gMassTwiceRhalfmass==0 && rc>=0.5*pdata[i].gRhalfmass) pdata[i].gMassTwiceRhalfmass=EncMass;
+#endif //REDUCEDOUTPUT
         }
+#ifndef REDUCEDOUTPUT
         pdata[i].gveldisp(1,0)=pdata[i].gveldisp(0,1);
         pdata[i].gveldisp(2,0)=pdata[i].gveldisp(0,2);
         pdata[i].gveldisp(2,1)=pdata[i].gveldisp(1,2);
         if (pdata[i].gRvir==0) {pdata[i].gMvir=pdata[i].gmass;pdata[i].gRvir=pdata[i].gsize;}
         pdata[i].gveldisp=pdata[i].gveldisp*(1.0/pdata[i].gmass);
+#endif //REDUCEDOUTPUT
         pdata[i].gsigma_v=pow(pdata[i].gveldisp.Det(),1.0/6.0);
         Ekin*=0.5;
+#ifndef REDUCEDOUTPUT
         if (opt.iextrahalooutput && pdata[i].hostid == -1) {
             pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
         }
@@ -481,6 +488,17 @@ private(EncMassSF,EncMassNSF,Krot_sf,Krot_nsf,Ekin_sf,Ekin_nsf)
         else {
             pdata[i].glambda_B=pdata[i].gJ.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
         }
+#else
+        if (pdata[i].hostid == -1) {
+            pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+        else if (pdata[i].hostid != -1){
+            pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+        else {
+            pdata[i].glambda_B=pdata[i].gJ.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+#endif //REDUCEDOUTPUT
 
         //calculate the rotational energy about the angular momentum axis
         //this is defined as the specific angular momentum about the angular momentum
@@ -1149,9 +1167,11 @@ private(j,Pval,rc,x,y,z,vx,vy,vz,J,mval)
             vz = (*Pval).Vz()-pdata[i].gcmvel[2];
             J=Coordinate(Pval->GetPosition()).Cross(Coordinate(vx,vy,vz))*mval;
             Jx+=J[0];Jy+=J[1];Jz+=J[2];
+#ifndef REDUCEDOUTPUT
             if (rc<pdata[i].gR200m) {Jx200m+=J[0];Jy200m+=J[1];Jz200m+=J[2];}
             if (rc<pdata[i].gR200c) {Jx200c+=J[0];Jy200c+=J[1];Jz200c+=J[2];}
             if (rc<pdata[i].gRBN98) {JxBN98+=J[0];JyBN98+=J[1];JzBN98+=J[2];}
+#endif //REDUCEDOUTPUT
             sxx+=vx*vx*mval;
             syy+=vy*vy*mval;
             szz+=vz*vz*mval;
@@ -1171,27 +1191,35 @@ private(j,Pval,rc,x,y,z,vx,vy,vz,J,mval)
         pdata[i].gJ[2]=Jz;
         if (opt.iextrahalooutput) {
             if (opt.iInclusiveHalo==0) {
+#ifndef REDUCEDOUTPUT
                 pdata[i].gJ200m[0]=Jx200m;
                 pdata[i].gJ200m[1]=Jy200m;
                 pdata[i].gJ200m[2]=Jz200m;
+#endif  //REDUCEDOUTPUT
                 pdata[i].gJ200c[0]=Jx200c;
                 pdata[i].gJ200c[1]=Jy200c;
                 pdata[i].gJ200c[2]=Jz200c;
+#ifndef REDUCEDOUTPUT
                 pdata[i].gJBN98[0]=JxBN98;
                 pdata[i].gJBN98[1]=JyBN98;
                 pdata[i].gJBN98[2]=JzBN98;
+#endif  //REDUCEDOUTPUT
             }
             else {
                 if (pdata[i].hostid!=-1) {
+#ifndef  REDUCEDOUTPUT
                     pdata[i].gJ200m[0]=Jx200m;
                     pdata[i].gJ200m[1]=Jy200m;
                     pdata[i].gJ200m[2]=Jz200m;
+#endif  //REDUCEDOUTPUT
                     pdata[i].gJ200c[0]=Jx200c;
                     pdata[i].gJ200c[1]=Jy200c;
                     pdata[i].gJ200c[2]=Jz200c;
+#ifndef  REDUCEDOUTPUT
                     pdata[i].gJBN98[0]=JxBN98;
                     pdata[i].gJBN98[1]=JyBN98;
                     pdata[i].gJBN98[2]=JzBN98;
+#endif  //REDUCEDOUTPUT
                 }
                 if (pdata[i].hostid==-1) {
                     pdata[i].gJ200m_excl[0]=Jx200m;
@@ -1215,6 +1243,7 @@ private(j,Pval,rc,x,y,z,vx,vy,vz,J,mval)
         pdata[i].gveldisp=pdata[i].gveldisp*(1.0/pdata[i].gmass);
         pdata[i].gsigma_v=pow(pdata[i].gveldisp.Det(),1.0/6.0);
         Ekin*=0.5;
+#ifndef REDUCEDOUTPUT
         if (opt.iextrahalooutput && pdata[i].hostid == -1) {
             pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
         }
@@ -1224,6 +1253,17 @@ private(j,Pval,rc,x,y,z,vx,vy,vz,J,mval)
         else {
             pdata[i].glambda_B=pdata[i].gJ.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
         }
+#else
+        if (pdata[i].hostid == -1) {
+            pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+        else if (pdata[i].hostid != -1){
+            pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+        else {
+            pdata[i].glambda_B=pdata[i].gJ.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+#endif //REDUCEDOUTPUT
         //rotational support calculation
 #ifdef USEOPENMP
 #pragma omp parallel default(shared) \
@@ -2491,8 +2531,10 @@ firstprivate(virval,m200val,m200mval,mBN98val,iSOfound)
                 J=Coordinate(x,y,z).Cross(Coordinate(vx,vy,vz))*massval;
                 rc=Pval->Radius();
                 if (rc<=pdata[i].gR200c) pdata[i].gJ200c+=J;
+#ifndef REDUCEDOUTPUT
                 if (rc<=pdata[i].gR200m) pdata[i].gJ200m+=J;
                 if (rc<=pdata[i].gRBN98) pdata[i].gJBN98+=J;
+#endif //REDUCEDOUTPUT
 #ifdef GASON
                 if (opt.iextragasoutput) {
                     if (Part[noffset[i] + j].GetType()==GASTYPE){
@@ -2793,8 +2835,10 @@ private(i,j,k,taggedparts,radii,masses,indices,posparts,velparts,typeparts,n,dx,
                     J=Coordinate(posparts[indices[j]]).Cross(velparts[indices[j]])*massval;
                     rc=posparts[indices[j]].Length();
                     if (rc<=pdata[i].gR200c) pdata[i].gJ200c+=J;
+#ifndef REDUCEDOUTPUT
                     if (rc<=pdata[i].gR200m) pdata[i].gJ200m+=J;
                     if (rc<=pdata[i].gRBN98) pdata[i].gJBN98+=J;
+#endif //REDUCEDOUTPUT
 #ifdef GASON
                     if (opt.iextragasoutput) {
                         if (typeparts[indices[j]]==GASTYPE){
@@ -3230,11 +3274,13 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
                 J=Coordinate(posparts[indices[j]]).Cross(velparts[indices[j]])*massval;
                 rc=posparts[indices[j]].Length();
                 if (rc<=pdata[i].gR200c) pdata[i].gJ200c+=J;
+#ifndef REDUCEDOUTPUT
                 if (rc<=pdata[i].gR200m) pdata[i].gJ200m+=J;
                 if (rc<=pdata[i].gRBN98) pdata[i].gJBN98+=J;
                 for (auto iso=0;iso<opt.SOnum;iso++) if (rc<pdata[i].SO_radius[iso]) {
                     pdata[i].SO_angularmomentum[iso]+=J;
                 }
+#endif //REDUCEDOUTPUT
 #ifdef GASON
                 if (opt.iextragasoutput) {
                     if (typeparts[indices[j]]==GASTYPE){
@@ -3307,6 +3353,14 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
                 pdata[i].glambda_B=0;
             }
         }
+#ifdef REDUCEDOUTPUT
+        if (pdata[i].gR200c != -1) {
+            pdata[i].glambda_B=pdata[i].gJ200c.Length()/(pdata[i].gM200c*sqrt(2.0*opt.G*pdata[i].gM200c*pdata[i].gR200c));
+        }
+        else {
+            pdata[i].glambda_B=0;
+        }
+#endif //REDUCEDOUTPUT
 
         //if calculating profiles
         if (opt.iprofilecalc) {
@@ -3930,9 +3984,11 @@ void CalcConcentration(PropData &p)
 {
     double tol = max(1.0/(double)p.num, 1e-3);
     p.cNFW = CalcConcentrationRootFindingVmax(p.VmaxVvir2, tol);
+#ifndef  REDUCEDOUTPUT
     p.cNFW200c = CalcConcentrationRootFindingRhalf(p.gRhalf200c/p.gR200c, tol);
     p.cNFW200m = CalcConcentrationRootFindingRhalf(p.gRhalf200m/p.gR200m, tol);
     p.cNFWBN98 = CalcConcentrationRootFindingRhalf(p.gRhalfBN98/p.gRBN98, tol);
+#endif  //REDUCEDOUTPUT
 }
 
 double CalcConcentrationRootFindingRhalf(double rratio, double tol)
@@ -4009,19 +4065,24 @@ void CopyMasses(Options &opt, const Int_t nhalos, PropData *&pold, PropData *&pn
     for (Int_t i=1;i<=nhalos;i++) {
         pnew[i].gNFOF=pold[i].gNFOF;
         pnew[i].gMFOF=pold[i].gMFOF;
-        pnew[i].gMvir=pold[i].gMvir;
-        pnew[i].gRvir=pold[i].gRvir;
         pnew[i].gM200c=pold[i].gM200c;
         pnew[i].gR200c=pold[i].gR200c;
+        pnew[i].gRhalfmass=pold[i].gRhalfmass;
+
+#ifndef REDUCEDOUTPUT
+        pnew[i].gMvir=pold[i].gMvir;
+        pnew[i].gRvir=pold[i].gRvir;
         pnew[i].gM200m=pold[i].gM200m;
         pnew[i].gR200m=pold[i].gR200m;
         pnew[i].gMBN98=pold[i].gMBN98;
         pnew[i].gRBN98=pold[i].gRBN98;
-        pnew[i].gRhalfmass=pold[i].gRhalfmass;
+#endif //REDUCEDOUTPUT
         if (opt.iextrahalooutput) {
             pnew[i].gJ200c=pold[i].gJ200c;
+#ifndef REDUCEDOUTPUT
             pnew[i].gJ200m=pold[i].gJ200m;
             pnew[i].gJBN98=pold[i].gJBN98;
+#endif //REDUCEDOUTPUT
 #ifdef GASON
             if (opt.iextragasoutput) {
                 pnew[i].M_200crit_gas=pold[i].M_200crit_gas;
@@ -6549,18 +6610,19 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
             EncMass2 = EncMass;
             continue;
         }
+        if (pdata.gR200c==0) if (rhoval<m200val)
+        {
+            delta = (m200val-rhoval);
+            pdata.gR200c=rc*exp(gamma1*delta);
+            pdata.gM200c=EncMass*exp(gamma2*delta);
+        }
+#ifndef REDUCEDOUTPUT
         if (pdata.gRvir==0) if (rhoval<virval)
         {
             //linearly interpolate, unless previous density also below threshold (which would happen at the start, then just set value)
             delta = (virval-rhoval);
             pdata.gRvir=rc*exp(gamma1*delta);
             pdata.gMvir=EncMass*exp(gamma2*delta);
-        }
-        if (pdata.gR200c==0) if (rhoval<m200val)
-        {
-            delta = (m200val-rhoval);
-            pdata.gR200c=rc*exp(gamma1*delta);
-            pdata.gM200c=EncMass*exp(gamma2*delta);
         }
         if (pdata.gR200m==0) if (rhoval<m200mval)
         {
@@ -6580,6 +6642,7 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
             pdata.gRBN98=rc*exp(gamma1*delta);
             pdata.gMBN98=EncMass*exp(gamma2*delta);
         }
+#endif //REDUCEDOUTPUT
         for (auto iso=0;iso<opt.SOnum;iso++) {
             if (pdata.SO_radius[iso]==0) if (rhoval<SOlgrhovals[iso])
             {
@@ -6590,19 +6653,29 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
             }
         }
         //if all overdensity thresholds found, store index and exit
+#ifndef REDUCEDOUTPUT
         if (pdata.gR200m!=0&& pdata.gR200c!=0&&pdata.gRvir!=0&&pdata.gR500c!=0&&pdata.gRBN98!=0&&iSOfound==opt.SOnum) {
             llindex=j;
             break;
         }
+#else //REDUCEDOUTPUT
+        if (pdata.gR200c!=0&&iSOfound==opt.SOnum) {
+            llindex=j;
+            break;
+        }
+#endif //REDUCEDOUTPUT
     }
     //if masses are below min min mass of single particle, set to zero
     if (pdata.gM200c<MinMass) {pdata.gM200c=pdata.gR200c=0.0;}
+#ifndef REDUCEDOUTPUT
     if (pdata.gM200m<MinMass) {pdata.gM200m=pdata.gR200m=0.0;}
     if (pdata.gMvir<MinMass) {pdata.gMvir=pdata.gRvir=0.0;}
     if (pdata.gM500c<MinMass) {pdata.gM500c=pdata.gR500c=0.0;}
     if (pdata.gMBN98<MinMass) {pdata.gMBN98=pdata.gRBN98=0.0;}
+#endif //REDUCEDOUTPUT
     for (auto iso=0;iso<opt.SOnum;iso++) if (pdata.SO_mass[iso]<MinMass) {pdata.SO_mass[iso]=pdata.SO_radius[iso]=0.0;}
 
+#ifndef REDUCEDOUTPUT
     // now that overdensity masses have been found, find half mass radii
 #ifdef NOMASS
     massval = opt.MassValue;
@@ -6633,6 +6706,7 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
         oldrc = rc;
         if (pdata.gRhalf200c > 0 && pdata.gRhalf200m > 0 && pdata.gRhalfBN98 > 0) break;
     }
+#endif //REDUCEDOUTPUT
 
     return llindex;
 }
@@ -6690,18 +6764,19 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
             EncMass2 = EncMass;
             continue;
         }
+        if (pdata.gR200c==0) if (rhoval<m200val)
+        {
+            delta = (m200val-rhoval);
+            pdata.gR200c=rc*exp(gamma1*delta);
+            pdata.gM200c=EncMass*exp(gamma2*delta);
+        }
+#ifndef REDUCEDOUTPUT
         if (pdata.gRvir==0) if (rhoval<virval)
         {
             //linearly interpolate, unless previous density also below threshold (which would happen at the start, then just set value)
             delta = (virval-rhoval);
             pdata.gRvir=rc*exp(gamma1*delta);
             pdata.gMvir=EncMass*exp(gamma2*delta);
-        }
-        if (pdata.gR200c==0) if (rhoval<m200val)
-        {
-            delta = (m200val-rhoval);
-            pdata.gR200c=rc*exp(gamma1*delta);
-            pdata.gM200c=EncMass*exp(gamma2*delta);
         }
         if (pdata.gR200m==0) if (rhoval<m200mval)
         {
@@ -6721,6 +6796,7 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
             pdata.gRBN98=rc*exp(gamma1*delta);
             pdata.gMBN98=EncMass*exp(gamma2*delta);
         }
+#endif //REDUCEDOUTPUT
         for (auto iso=0;iso<opt.SOnum;iso++) {
             if (pdata.SO_radius[iso]==0) if (rhoval<SOlgrhovals[iso])
             {
@@ -6730,20 +6806,29 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
                 iSOfound++;
             }
         }
-        //if all overdensity thresholds found, store index and exit
+#ifndef REDUCEDOUTPUT
         if (pdata.gR200m!=0&& pdata.gR200c!=0&&pdata.gRvir!=0&&pdata.gR500c!=0&&pdata.gRBN98!=0&&iSOfound==opt.SOnum) {
             llindex=j;
             break;
         }
+#else //REDUCEDOUTPUT
+        if (pdata.gR200c!=0&&iSOfound==opt.SOnum) {
+            llindex=j;
+            break;
+        }
+#endif //REDUCEDOUTPUT
     }
     //if masses are below min mass, set to zero
     if (pdata.gM200c<MinMass) {pdata.gM200c=pdata.gR200c=0.0;}
+#ifndef REDUCEDOUTPUT
     if (pdata.gM200m<MinMass) {pdata.gM200m=pdata.gR200m=0.0;}
     if (pdata.gMvir<MinMass) {pdata.gMvir=pdata.gRvir=0.0;}
     if (pdata.gM500c<MinMass) {pdata.gM500c=pdata.gR500c=0.0;}
     if (pdata.gMBN98<MinMass) {pdata.gMBN98=pdata.gRBN98=0.0;}
+#endif //REDUCEDOUTPUT
     for (auto iso=0;iso<opt.SOnum;iso++) if (pdata.SO_mass[iso]<MinMass) {pdata.SO_mass[iso]=pdata.SO_radius[iso]=0.0;}
 
+#ifndef REDUCEDOUTPUT
     // now that overdensity masses have been found, find half mass radii
 #ifdef NOMASS
     massval = opt.MassValue;
@@ -6774,6 +6859,7 @@ Int_t CalculateSphericalOverdensity(Options &opt, PropData &pdata,
         oldrc = rc;
         if (pdata.gRhalf200c > 0 && pdata.gRhalf200m > 0 && pdata.gRhalfBN98 > 0) break;
     }
+#endif //REDUCEDOUTPUT
     return llindex;
 }
 
@@ -6791,16 +6877,18 @@ void CalculateSphericalOverdensitySubhalo(Options &opt, PropData &pdata,
         Pval=&Part[j];
         rc=Pval->Radius();
         rhoval = log(EncMass)-3.0*log(rc)+fac;
-        if (pdata.gRvir==0 && EncMass>=0.01*pdata.gmass) if (rhoval>virval)
-        {pdata.gMvir=EncMass;pdata.gRvir=rc;}
         if (pdata.gR200c==0 && EncMass>=0.01*pdata.gmass) if (rhoval>m200val)
         {pdata.gM200c=EncMass;pdata.gR200c=rc;}
+#ifndef REDUCEDOUTPUT
+        if (pdata.gRvir==0 && EncMass>=0.01*pdata.gmass) if (rhoval>virval)
+        {pdata.gMvir=EncMass;pdata.gRvir=rc;}
         if (pdata.gR200m==0 && EncMass>=0.01*pdata.gmass) if (rhoval>m200mval)
         {pdata.gM200m=EncMass;pdata.gR200m=rc;}
         if (pdata.gR500c==0 && EncMass>=0.01*pdata.gmass) if (rhoval>m500val)
         {pdata.gM500c=EncMass;pdata.gR500c=rc;}
         if (pdata.gRBN98==0 && EncMass>=0.01*pdata.gmass) if (rhoval>mBN98val)
         {pdata.gMBN98=EncMass;pdata.gRBN98=rc;}
+#endif //REDUCEDOUTPUT
         for (auto iso=0;iso<opt.SOnum;iso++) {
             if (pdata.SO_radius[iso]==0) if (rhoval<SOlgrhovals[iso])
             {
@@ -6809,16 +6897,24 @@ void CalculateSphericalOverdensitySubhalo(Options &opt, PropData &pdata,
                 iSOfound++;
             }
         }
-        //if all overdensity thresholds found, store index and exit
+#ifndef REDUCEDOUTPUT
         if (pdata.gR200m!=0&& pdata.gR200c!=0&&pdata.gRvir!=0&&pdata.gR500c!=0&&pdata.gRBN98!=0&&iSOfound==opt.SOnum) {
             break;
         }
+#else //REDUCEDOUTPUT
+        if (pdata.gR200c!=0&&iSOfound==opt.SOnum) {
+            break;
+        }
+#endif //REDUCEDOUTPUT
+
 #ifdef NOMASS
         EncMass-=opt.MassValue;
 #else
         EncMass-=Pval->GetMass();
 #endif
     }
+
+#ifndef REDUCEDOUTPUT
 
     // now that overdensity masses have been found, find half mass radii
 #ifdef NOMASS
@@ -6851,6 +6947,7 @@ void CalculateSphericalOverdensitySubhalo(Options &opt, PropData &pdata,
         oldrc = rc;
         if (pdata.gRhalf200c > 0 && pdata.gRhalf200m > 0 && pdata.gRhalfBN98 > 0) break;
     }
+#endif //REDUCEDOUTPUT
 
 }
 
@@ -6889,13 +6986,14 @@ void CalculateSphericalOverdensityExclusive(Options &opt, PropData &pdata,
 
 void SetSphericalOverdensityMasstoFlagValue(Options &opt, PropData &pdata)
 {
-    if (pdata.gRvir==0) {
-        pdata.gRvir=-1;
-        pdata.gMvir=-1;
-    }
     if (pdata.gR200c==0) {
         pdata.gR200c=-1;
         pdata.gM200c=-1;
+    }
+#ifndef REDUCEDOUTPUT
+    if (pdata.gRvir==0) {
+        pdata.gRvir=-1;
+        pdata.gMvir=-1;
     }
     if (pdata.gR200m==0) {
         pdata.gR200m=-1;
@@ -6909,6 +7007,7 @@ void SetSphericalOverdensityMasstoFlagValue(Options &opt, PropData &pdata)
         pdata.gRBN98=-1;
         pdata.gMBN98=-1;
     }
+#endif //REDUCEDOUTPUT
     for (auto iso=0;iso<opt.SOnum;iso++) if (pdata.SO_radius[iso]==0)
     {
         pdata.SO_radius[iso]=-1;
@@ -6918,11 +7017,13 @@ void SetSphericalOverdensityMasstoFlagValue(Options &opt, PropData &pdata)
 
 void SetSphericalOverdensityMasstoTotalMass(Options &opt, PropData &pdata)
 {
-    if (pdata.gRvir==0) {pdata.gMvir=pdata.gmass;pdata.gRvir=pdata.gsize;}
     if (pdata.gR200c==0) {pdata.gM200c=pdata.gmass;pdata.gR200c=pdata.gsize;}
+#ifndef REDUCEDOUTPUT
+    if (pdata.gRvir==0) {pdata.gMvir=pdata.gmass;pdata.gRvir=pdata.gsize;}
     if (pdata.gR200m==0) {pdata.gM200m=pdata.gmass;pdata.gR200m=pdata.gsize;}
     if (pdata.gR500c==0) {pdata.gM500c=pdata.gmass;pdata.gR500c=pdata.gsize;}
     if (pdata.gRBN98==0) {pdata.gMBN98=pdata.gmass;pdata.gRBN98=pdata.gsize;}
+#endif //REDUCEDOUTPUT
     for (auto iso=0;iso<opt.SOnum;iso++) if (pdata.SO_radius[iso]==0)
     {
         pdata.SO_radius[iso]=pdata.gsize;

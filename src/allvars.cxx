@@ -66,10 +66,10 @@ void PropData::WriteBinary(fstream &Fout, Options&opt){
         idval=hostfofid;
         Fout.write((char*)&idval,sizeof(idval));
     }
-
+#ifndef REDUCEDOUTPUT
     val=gMvir;
     Fout.write((char*)&val,sizeof(val));
-
+#endif //REDUCEDOUTPUT
     for (int k=0;k<3;k++) val3[k]=gcm[k];
     Fout.write((char*)val3,sizeof(val)*3);
     for (int k=0;k<3;k++) val3[k]=gposmbp[k];
@@ -83,63 +83,80 @@ void PropData::WriteBinary(fstream &Fout, Options&opt){
     for (int k=0;k<3;k++) val3[k]=gvelminpot[k];
     Fout.write((char*)val3,sizeof(val)*3);
 
-
+#ifndef REDUCEDOUTPUT
     val=gmass;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
     val=gMFOF;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=gM200m;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
     val=gM200c;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=gMBN98;
     Fout.write((char*)&val,sizeof(val));
-
+#endif //REDUCEDOUTPUT
     val=Efrac;
     Fout.write((char*)&val,sizeof(val));
 
+#ifndef REDUCEDOUTPUT
     val=gRvir;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
     val=gsize;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=gR200m;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
     val=gR200c;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=gRBN98;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
     val=gRhalfmass;
     Fout.write((char*)&val,sizeof(val));
     val=gRmaxvel;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=gRhalf200m;
     Fout.write((char*)&val,sizeof(val));
     val=gRhalf200c;
     Fout.write((char*)&val,sizeof(val));
     val=gRhalfBN98;
     Fout.write((char*)&val,sizeof(val));
+#endif //REDUCEDOUTPUT
 
     val=gmaxvel;
     Fout.write((char*)&val,sizeof(val));
     val=gsigma_v;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) val9[k*3+n]=gveldisp(k,n);
     Fout.write((char*)val9,sizeof(val)*9);
+#endif //REDUCEDOUTPUT
 
     val=glambda_B;
     Fout.write((char*)&val,sizeof(val));
     for (int k=0;k<3;k++) val3[k]=gJ[k];
     Fout.write((char*)val3,sizeof(val)*3);
 
+#ifndef REDUCEDOUTPUT
     val=gq;
     Fout.write((char*)&val,sizeof(val));
     val=gs;
     Fout.write((char*)&val,sizeof(val));
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) val9[k*3+n]=geigvec(k,n);
     Fout.write((char*)val9,sizeof(val)*9);
+#endif //REDUCEDOUTPUT
 
     val=cNFW;
     Fout.write((char*)&val,sizeof(val));
+#ifndef REDUCEDOUTPUT
     val=cNFW200c;
     Fout.write((char*)&val,sizeof(val));
     val=cNFW200m;
@@ -169,6 +186,7 @@ void PropData::WriteBinary(fstream &Fout, Options&opt){
     Fout.write((char*)&val,sizeof(val));
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) val9[k*3+n]=RV_eigvec(k,n);
     Fout.write((char*)val9,sizeof(val)*9);
+#endif //REDUCEDOUTPUT
 
     if (opt.iextrahalooutput) {
         for (int k=0;k<3;k++) val3[k]=gJ200m[k];
@@ -841,29 +859,44 @@ void PropData::WriteAscii(fstream &Fout, Options&opt){
     for (int k=0;k<3;k++) Fout<<gvelminpot[k]<<" ";
     Fout<<gmass<<" ";
     Fout<<gMFOF<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gM200m<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<gM200c<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gMBN98<<" ";
     Fout<<Efrac<<" ";
     Fout<<gRvir<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<gsize<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gR200m<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<gR200c<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gRBN98<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<gRhalfmass<<" ";
     Fout<<gRmaxvel<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gRhalf200m<<" ";
     Fout<<gRhalf200c<<" ";
     Fout<<gRhalfBN98<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<gmaxvel<<" ";
     Fout<<gsigma_v<<" ";
+#ifndef REDUCEDOUTPUT
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) Fout<<gveldisp(k,n)<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<glambda_B<<" ";
     for (int k=0;k<3;k++) Fout<<gJ[k]<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<gq<<" ";
     Fout<<gs<<" ";
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) Fout<<geigvec(k,n)<<" ";
+#endif // REDUCEDOUTPUT
     Fout<<cNFW<<" ";
+#ifndef REDUCEDOUTPUT
     Fout<<cNFW200c<<" ";
     Fout<<cNFW200m<<" ";
     Fout<<cNFWBN98<<" ";
@@ -878,7 +911,7 @@ void PropData::WriteAscii(fstream &Fout, Options&opt){
     Fout<<RV_q<<" ";
     Fout<<RV_s<<" ";
     for (int k=0;k<3;k++) for (int n=0;n<3;n++) Fout<<RV_eigvec(k,n)<<" ";
-
+#endif // REDUCEDOUTPUT
     if (opt.iextrahalooutput) {
         for (int k=0;k<3;k++) Fout<<gJ200m[k]<<" ";
         for (int k=0;k<3;k++) Fout<<gJ200c[k]<<" ";
@@ -1456,9 +1489,10 @@ PropDataHeader::PropDataHeader(Options&opt){
         adiospredtypeinfo.push_back(ADIOS_DATATYPES::adios_long);
     }
 #endif
-
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("Mvir");
     unitdatainfo.push_back(HeaderUnitInfo(1));
+#endif //REDUCEDOUTPUT
     headerdatainfo.push_back("Xc");
     headerdatainfo.push_back("Yc");
     headerdatainfo.push_back("Zc");
@@ -1483,30 +1517,41 @@ PropDataHeader::PropDataHeader(Options&opt){
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(0,0,1));
     headerdatainfo.push_back("Mass_tot");
     headerdatainfo.push_back("Mass_FOF");
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("Mass_200mean");
     headerdatainfo.push_back("Mass_200crit");
+#endif //REDUCEDOUTPUT
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("Mass_BN98");
+#endif //REDUCEDOUTPUT
     //indicate the property is mass
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(1));
     headerdatainfo.push_back("Efrac");
     //indicate property is unitless
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo());
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("Rvir");
     headerdatainfo.push_back("R_size");
     headerdatainfo.push_back("R_200mean");
+#endif //REDUCEDOUTPUT
     headerdatainfo.push_back("R_200crit");
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("R_BN98");
+#endif //REDUCEDOUTPUT
     headerdatainfo.push_back("R_HalfMass");
     headerdatainfo.push_back("Rmax");
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("R_HalfMass_200mean");
     headerdatainfo.push_back("R_HalfMass_200crit");
     headerdatainfo.push_back("R_HalfMass_BN98");
+#endif //REDUCEDOUTPUT
     //length
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(0,1));
     headerdatainfo.push_back("Vmax");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(0,0,1));
     headerdatainfo.push_back("sigV");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(0,0,1));
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("veldisp_xx");
     headerdatainfo.push_back("veldisp_xy");
     headerdatainfo.push_back("veldisp_xz");
@@ -1517,12 +1562,14 @@ PropDataHeader::PropDataHeader(Options&opt){
     headerdatainfo.push_back("veldisp_zy");
     headerdatainfo.push_back("veldisp_zz");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(0,0,2));
+#endif //REDUCEDOUTPUT
     headerdatainfo.push_back("lambda_B");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo());
     headerdatainfo.push_back("Lx");
     headerdatainfo.push_back("Ly");
     headerdatainfo.push_back("Lz");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo(1,1,1));
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("q");
     headerdatainfo.push_back("s");
     headerdatainfo.push_back("eig_xx");
@@ -1534,7 +1581,10 @@ PropDataHeader::PropDataHeader(Options&opt){
     headerdatainfo.push_back("eig_zx");
     headerdatainfo.push_back("eig_zy");
     headerdatainfo.push_back("eig_zz");
+#endif //REDUCEDOUTPUT
     headerdatainfo.push_back("cNFW");
+    sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo());
+#ifndef REDUCEDOUTPUT
     headerdatainfo.push_back("cNFW_200crit");
     headerdatainfo.push_back("cNFW_200mean");
     headerdatainfo.push_back("cNFW_BN98");
@@ -1575,6 +1625,7 @@ PropDataHeader::PropDataHeader(Options&opt){
     headerdatainfo.push_back("RVmax_eig_zy");
     headerdatainfo.push_back("RVmax_eig_zz");
     sizeval = unitdatainfo.size(); for (int i=sizeval;i<headerdatainfo.size();i++) unitdatainfo.push_back(HeaderUnitInfo());
+#endif //REDUCEDOUTPUT
 
     if (opt.iextrahalooutput) {
         headerdatainfo.push_back("Lx_200mean");
